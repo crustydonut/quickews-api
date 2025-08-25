@@ -1,0 +1,24 @@
+{
+  "name": "quickews",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy --minify",
+    "generate": "npx drizzle-kit generate",
+    "migrate:local": "wrangler d1 migrations apply quickews-d1 --local true",
+    "migrate:remote": "wrangler d1 migrations apply quickews-d1 --remote true",
+    "db": "sqlite3 ./.wrangler/state/v3/d1/miniflare-D1DatabaseObject/725a4049c44466daebbb32f0f5a7b1952cbfde97340320df837611099da22295.sqlite"
+  },
+  "dependencies": {
+    "@hono/zod-validator": "^0.7.2",
+    "drizzle-orm": "^0.44.4",
+    "hono": "^4.9.4",
+    "nanoid": "^5.1.5",
+    "zod": "^4.1.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250823.0",
+    "drizzle-kit": "^0.31.4",
+    "wrangler": "^4.32.0"
+  }
+}
