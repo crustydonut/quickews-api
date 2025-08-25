@@ -2,34 +2,25 @@ import { Hono } from "hono";
 import { Ratings } from "../../db/schema/Ratings";
 import { and, asc, avg, count, eq, gt } from "drizzle-orm";
 import z, { object } from "zod";
-import { Metrics } from "../../db/schema/Metrics";
-import { getUnixDate } from "../../utils/time";
 import { zThrowValidator } from "../../utils/validator";
 
+/**
+ * @typedef {object} Bindings
+ * @property {KVNamespace} KV - The user's unique identifier.
+ * @property {D1Database} DB - The user's unique identifier.
+ */
+
+/** @type {Hono<{Bindings: Bindings}>} */
 const ratings = new Hono();
 
 ratings.get("/ratings/avg", async (c) => {
-  const [ratingAvg] = await c
-    .get("db")
-    .select()
-    .from(Metrics)
-    .where(
-      and(eq(Metrics.table_name, "ratings"), eq(Metrics.metric_name, "avg"))
-    );
-
-  return c.json({ avg: ratingAvg ? ratingAvg.value : "No ratings yet" }, 200);
+  const ratingsAvg = await c.env.KV.get("cache:ratings:avg");
+  return c.json({ avg: ratingsAvg || "No ratings yet" });
 });
 
 ratings.get("/ratings/count", async (c) => {
-  const [ratingCount] = await c
-    .get("db")
-    .select()
-    .from(Metrics)
-    .where(
-      and(eq(Metrics.table_name, "ratings"), eq(Metrics.metric_name, "count"))
-    );
-
-  return c.json({ count: ratingCount ? parseInt(ratingCount.value) : 0 }, 200);
+  const ratingsCount = await c.env.KV.get("cache:ratings:count");
+  return c.json({ count: parseInt(ratingsCount) || 0 });
 });
 
 ratings.get(
@@ -55,7 +46,6 @@ ratings.get(
   }
 );
 
-// cf-tunstile
 ratings.post(
   "/ratings",
   zThrowValidator(
@@ -69,6 +59,23 @@ ratings.post(
   async (c) => {
     const { nickname, stars, description } = c.req.valid("json");
 
+    const ip = c.req.header("CF-Connecting-IP") || "8.8.8.8";
+    const key = `limit:ratings:${ip}`;
+
+    const limit = await c.env.KV.get(key);
+
+    if (limit) {
+      const intLimit = parseInt(limit);
+
+      if (intLimit >= 5) {
+        return c.body(null, 429);
+      }
+
+      await c.env.KV.put(key, (intLimit + 1).toString());
+    } else {
+      await c.env.KV.put(key, "1", { expirationTtl: 86400 });
+    }
+
     await c
       .get("db")
       .insert(Ratings)
@@ -78,53 +85,22 @@ ratings.post(
         nickname,
       });
 
-    let [{ average }] = await c
+    const [{ ratingsAvg, ratingsCount }] = await c
       .get("db")
-      .select({ average: avg(Ratings.stars) })
+      .select({
+        ratingsAvg: avg(Ratings.stars),
+        ratingsCount: count(Ratings.stars),
+      })
       .from(Ratings);
 
-    average = parseFloat(average / 2).toFixed(1);
-
-    await c
-      .get("db")
-      .insert(Metrics)
-      .values({
-        table_name: "ratings",
-        metric_name: "avg",
-        value: average,
-        created_at: getUnixDate(),
-      })
-      .onConflictDoUpdate({
-        target: [Metrics.table_name, Metrics.metric_name],
-        set: {
-          value: average,
-          created_at: getUnixDate(),
-        },
-      });
-
-    let [{ ratingCount }] = await c
-      .get("db")
-      .select({ ratingCount: count(Ratings.stars) })
-      .from(Ratings);
-
-    ratingCount = parseInt(ratingCount).toFixed(0);
-
-    await c
-      .get("db")
-      .insert(Metrics)
-      .values({
-        table_name: "ratings",
-        metric_name: "count",
-        value: ratingCount,
-        created_at: getUnixDate(),
-      })
-      .onConflictDoUpdate({
-        target: [Metrics.table_name, Metrics.metric_name],
-        set: {
-          value: ratingCount,
-          created_at: getUnixDate(),
-        },
-      });
+    await c.env.KV.put(
+      "cache:ratings:count",
+      parseInt(ratingsCount).toFixed(0)
+    );
+    await c.env.KV.put(
+      "cache:ratings:avg",
+      parseFloat(ratingsAvg / 2).toFixed(1)
+    );
 
     return c.body(null, 204);
   }

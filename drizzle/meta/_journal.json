@@ -8,6 +8,13 @@
       "when": 1756144982372,
       "tag": "0000_common_golden_guardian",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1756152429789,
+      "tag": "0001_strong_lester",
+      "breakpoints": true
     }
   ]
 }

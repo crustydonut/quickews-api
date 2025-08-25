@@ -7,7 +7,7 @@
     "generate": "npx drizzle-kit generate",
     "migrate:local": "wrangler d1 migrations apply quickews-d1 --local true",
     "migrate:remote": "wrangler d1 migrations apply quickews-d1 --remote true",
-    "db": "sqlite3 ./.wrangler/state/v3/d1/miniflare-D1DatabaseObject/725a4049c44466daebbb32f0f5a7b1952cbfde97340320df837611099da22295.sqlite"
+    "db": "sqlite3 ./.wrangler/state/v3/d1/miniflare-D1DatabaseObject/3379f4672c7d8e9f3132a4cd19d5a2bea29e1b3c997399e9d9e3fc77c1a45158.sqlite"
   },
   "dependencies": {
     "@hono/zod-validator": "^0.7.2",

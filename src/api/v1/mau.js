@@ -13,6 +13,22 @@ const mau = new Hono();
 
 mau.post("/mau", async (c) => {
   const ip = c.req.header("CF-Connecting-IP");
+
+  const key = `limit:mau:${ip}`;
+  const limit = await c.env.KV.get(key);
+
+  if (limit) {
+    const intLimit = parseInt(limit);
+
+    if (intLimit >= 5) {
+      return c.body(null, 429);
+    }
+
+    await c.env.KV.put(key, (intLimit + 1).toString());
+  } else {
+    await c.env.KV.put(key, "1", { expirationTtl: 30 * 24 * 3600 });
+  }
+
   const url = `https://api.ipinfo.io/lite/${ip}?token=${c.env.IPINFO_API_TOKEN}`;
   const response = await fetch(url);
   const { country, continent_code } = await response.json();
@@ -27,10 +43,7 @@ mau.post("/mau", async (c) => {
 
 mau.get("/mau", async (c) => {
   const key = "cache:mau:mau_count";
-  let mauCount;
-
-  mauCount = await c.env.KV.get(key);
-  console.log(mauCount);
+  let mauCount = await c.env.KV.get(key);
 
   if (mauCount === null) {
     const thirtyDaysAgo = Math.floor(Date.now() / 1000) - 2592000;
@@ -40,9 +53,7 @@ mau.get("/mau", async (c) => {
       .from(Mau)
       .where(gte(Mau.created_at, thirtyDaysAgo));
 
-    console.log(mauCount);
-
-    await c.env.KV.put(key, mauCount, { expirationTtl: 3600 * 2 });
+    await c.env.KV.put(key, mauCount, { expirationTtl: 3600 * 3 });
   }
 
   return c.json({ count: parseInt(mauCount) });

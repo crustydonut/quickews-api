@@ -6,8 +6,8 @@ export const Ratings = sqliteTable(
   {
     id: integer("id").notNull().primaryKey({ autoIncrement: true }),
     nickname: text("nickname").notNull().default("Anonymous"),
-    stars: integer("stars").notNull(), // 0-10
-    description: text("description"), // 400 chars long
+    stars: integer("stars").notNull(),
+    description: text("description"),
     approved: integer("approved").notNull().default(0),
     created_at: integer("created_at")
       .notNull()

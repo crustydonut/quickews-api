@@ -12,7 +12,6 @@ import z, { object } from "zod";
 /** @type {Hono<{Bindings: Bindings}>} */
 const feedback = new Hono();
 
-// cf-tunstile
 feedback.post(
   "/feedback",
   zThrowValidator(
@@ -26,26 +25,26 @@ feedback.post(
   async (c) => {
     const { type, title, description } = c.req.valid("json");
 
-    const ip = c.req.header("CF-Connecting-IP") || "8.8.8.9";
+    const ip = c.req.header("CF-Connecting-IP") || "8.8.8.8";
     const key = `limit:feedback:${ip}`;
 
-    const count = await c.env.KV.get(key);
+    const limit = await c.env.KV.get(key);
 
-    if (count) {
-      const intCount = parseInt(count);
+    if (limit) {
+      const intLimit = parseInt(limit);
 
-      if (intCount >= 10) {
+      if (intLimit >= 5) {
         return c.body(null, 429);
       }
 
-      c.env.KV.put(key, (intCount + 1).toString());
+      await c.env.KV.put(key, (intLimit + 1).toString());
     } else {
       await c.env.KV.put(key, "1", { expirationTtl: 86400 });
     }
 
     await c.get("db").insert(Feedback).values({ type, title, description });
 
-    return c.body(null, 201);
+    return c.body(null, 204);
   }
 );
 
