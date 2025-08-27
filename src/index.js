@@ -30,13 +30,11 @@ app.route("/api/v1", ratings);
 
 app.onError((err, c) => {
   if (err instanceof ZodError) {
-    return c.json(
-      {
-        error: "ValidationError",
-        message: err.message,
-      },
-      422
-    );
+    const userError = {
+      error: "ValidationError",
+      message: err.message,
+    };
+    return c.json(userError, 422);
   }
   return c.json({ error: "Internal Server Error" }, 500);
 });

@@ -33,10 +33,7 @@ mau.post("/mau", async (c) => {
   const response = await fetch(url);
   const { country, continent_code } = await response.json();
 
-  await c
-    .get("db")
-    .insert(Mau)
-    .values({ continent: continent_code, country, created_at: 1733488000 });
+  await c.get("db").insert(Mau).values({ continent: continent_code, country });
 
   return c.body(null, 204);
 });
@@ -46,7 +43,11 @@ mau.get("/mau", async (c) => {
   let mauCount = await c.env.KV.get(key);
 
   if (mauCount === null) {
-    const thirtyDaysAgo = Math.floor(Date.now() / 1000) - 2592000;
+    const date = new Date();
+    date.setUTCHours(0, 0, 0, 0);
+
+    const thirtyDaysAgo = Math.floor(date.getTime() / 1000) - 30 * 24 * 3600;
+
     [{ mauCount }] = await c
       .get("db")
       .select({ mauCount: count() })

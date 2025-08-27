@@ -1,5 +1,5 @@
 import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
-import { getUnixDate } from "../../utils/time";
+import { sql } from "drizzle-orm";
 
 export const Ratings = sqliteTable(
   "ratings",
@@ -11,7 +11,7 @@ export const Ratings = sqliteTable(
     approved: integer("approved").notNull().default(0),
     created_at: integer("created_at")
       .notNull()
-      .$defaultFn(() => getUnixDate()),
+      .default(sql`(strftime('%s', 'now', 'start of day'))`),
   },
   (table) => [index("idx_ratings_approved").on(table.approved)]
 );

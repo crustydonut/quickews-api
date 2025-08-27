@@ -1,6 +1,6 @@
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
-import { getUnixDate } from "../../utils/time";
 import { nanoid } from "nanoid";
+import { sql } from "drizzle-orm";
 
 export const Mau = sqliteTable("mau", {
   id: text("id")
@@ -9,7 +9,7 @@ export const Mau = sqliteTable("mau", {
     .$defaultFn(() => nanoid(16)),
   created_at: integer("created_at")
     .notNull()
-    .$defaultFn(() => getUnixDate()),
+    .default(sql`(strftime('%s', 'now', 'start of day'))`),
   country: text("country"),
   continent: text("continent"),
 });
