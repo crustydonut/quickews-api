@@ -20,14 +20,31 @@ feedback.post(
       type: z.enum(["bug", "feature"]),
       title: z.string().min(3).max(50),
       description: z.string().min(3).max(400),
+      token: z.string().min(1).max(2048),
     })
   ),
   async (c) => {
-    const { type, title, description } = c.req.valid("json");
+    const { type, title, description, token } = c.req.valid("json");
+    const ip = c.req.header("CF-Connecting-IP");
 
-    const ip = c.req.header("CF-Connecting-IP") || "8.8.8.8";
+    const formData = new FormData();
+    formData.append("secret", c.env.TURNSTILE_SECRET_KEY);
+    formData.append("response", token);
+    formData.append("remoteip", ip);
+
+    const url = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
+    const response = await fetch(url, {
+      method: "POST",
+      body: formData,
+    });
+
+    const data = await response.json();
+
+    if (!data.success) {
+      return c.json({}, 401);
+    }
+
     const key = `limit:feedback:${ip}`;
-
     const limit = await c.env.KV.get(key);
 
     if (limit) {

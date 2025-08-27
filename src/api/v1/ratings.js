@@ -64,10 +64,26 @@ ratings.post(
   ),
   async (c) => {
     const { nickname, stars, description } = c.req.valid("json");
+    const ip = c.req.header("CF-Connecting-IP");
 
-    const ip = c.req.header("CF-Connecting-IP") || "8.8.8.8";
+    const formData = new FormData();
+    formData.append("secret", c.env.TURNSTILE_SECRET_KEY);
+    formData.append("response", token);
+    formData.append("remoteip", ip);
+
+    const url = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
+    const response = await fetch(url, {
+      method: "POST",
+      body: formData,
+    });
+
+    const data = await response.json();
+
+    if (!data.success) {
+      return c.json({}, 401);
+    }
+
     const key = `limit:ratings:${ip}`;
-
     const limit = await c.env.KV.get(key);
 
     if (limit) {
