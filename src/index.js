@@ -32,7 +32,6 @@ app.onError((err, c) => {
   if (err instanceof ZodError) {
     const userError = {
       error: "ValidationError",
-      message: err.message,
     };
     return c.json(userError, 422);
   }
