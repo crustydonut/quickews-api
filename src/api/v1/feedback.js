@@ -18,8 +18,8 @@ feedback.post(
     "json",
     object({
       type: z.enum(["bug", "feature"]),
-      title: z.string().max(50),
-      description: z.string().max(400),
+      title: z.string().min(3).max(50),
+      description: z.string().min(3).max(400),
     })
   ),
   async (c) => {

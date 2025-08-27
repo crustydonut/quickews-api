@@ -51,9 +51,15 @@ ratings.post(
   zThrowValidator(
     "json",
     object({
-      stars: z.coerce.number().max(10).min(0).multipleOf(0.5),
-      description: z.string().max(400).optional(),
-      nickname: z.string().max(20).optional().default("Anonymous"),
+      stars: z.coerce.number().min(0.5).max(5).multipleOf(0.5),
+      description: z.preprocess(
+        (value) => (value === "" ? undefined : value),
+        z.string().max(400).optional()
+      ),
+      nickname: z.preprocess(
+        (value) => (value === "" ? undefined : value),
+        z.string().min(3).max(20).optional().default("Anonymous")
+      ),
     })
   ),
   async (c) => {
