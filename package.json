@@ -1,5 +1,5 @@
 {
-  "name": "quickews",
+  "name": "api-quickews",
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",

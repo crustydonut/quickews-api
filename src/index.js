@@ -23,10 +23,10 @@ app.use("*", async (c, next) => {
   await next();
 });
 
-app.route("/api/v1", mau);
-app.route("/api/v1", searches);
-app.route("/api/v1", feedback);
-app.route("/api/v1", ratings);
+app.route("/v1", mau);
+app.route("/v1", searches);
+app.route("/v1", feedback);
+app.route("/v1", ratings);
 
 app.onError((err, c) => {
   if (err instanceof ZodError) {
