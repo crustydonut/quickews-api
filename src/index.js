@@ -5,8 +5,18 @@ import mau from "./api/v1/mau";
 import searches from "./api/v1/searches";
 import feedback from "./api/v1/feedback";
 import ratings from "./api/v1/ratings";
+import { cors } from "hono/cors";
 
 const app = new Hono();
+
+app.use(
+  "*",
+  cors({
+    origin: "*",
+    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowHeaders: ["Content-Type"],
+  })
+);
 
 app.use("*", async (c, next) => {
   c.set("db", drizzle(c.env.DB));
