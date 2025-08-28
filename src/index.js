@@ -32,10 +32,11 @@ app.onError((err, c) => {
   if (err instanceof ZodError) {
     const userError = {
       error: "ValidationError",
+      data: err.message,
     };
     return c.json(userError, 422);
   }
-  return c.json({ error: "Internal Server Error" }, 500);
+  return c.json({ error: err.stack, err: err.message }, 500);
 });
 
 export default app;

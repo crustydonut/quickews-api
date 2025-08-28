@@ -60,10 +60,11 @@ ratings.post(
         (value) => (value === "" ? undefined : value),
         z.string().min(3).max(20).optional().default("Anonymous")
       ),
+      token: z.string().min(1).max(2048),
     })
   ),
   async (c) => {
-    const { nickname, stars, description } = c.req.valid("json");
+    const { nickname, stars, description, token } = c.req.valid("json");
     const ip = c.req.header("CF-Connecting-IP");
 
     const formData = new FormData();

@@ -41,7 +41,7 @@ feedback.post(
     const data = await response.json();
 
     if (!data.success) {
-      return c.json({}, 401);
+      return c.body(null, 401);
     }
 
     const key = `limit:feedback:${ip}`;
