@@ -9,6 +9,15 @@ import { Hono } from "hono";
 /** @type {Hono<{Bindings: Bindings}>} */
 const installs = new Hono();
 
+installs.get("/installs", async (c) => {
+  try {
+    const installs = await c.env.KV.get("cache:installs");
+    return c.json({ count: installs });
+  } catch (error) {
+    return c.json({ error: error.message });
+  }
+});
+
 installs.post("/installs", async (c) => {
   try {
     const ip = c.req.header("CF-Connecting-IP");
