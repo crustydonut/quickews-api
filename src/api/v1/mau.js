@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { Mau } from "../../db/schema/Mau";
 import { count, countDistinct, gte } from "drizzle-orm";
+import rateLimiter from "../../utils/rateLimiter";
 
 /**
  * @typedef {object} Bindings

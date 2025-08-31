@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import rateLimiter from "../../utils/rateLimiter";
 
 /**
  * @typedef {object} Bindings
