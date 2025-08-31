@@ -6,6 +6,7 @@ import searches from "./api/v1/searches";
 import feedback from "./api/v1/feedback";
 import ratings from "./api/v1/ratings";
 import { cors } from "hono/cors";
+import installs from "./api/v1/installs";
 
 const app = new Hono();
 
@@ -27,6 +28,7 @@ app.route("/v1", mau);
 app.route("/v1", searches);
 app.route("/v1", feedback);
 app.route("/v1", ratings);
+app.route("/v1", installs);
 
 app.onError((err, c) => {
   if (err instanceof ZodError) {

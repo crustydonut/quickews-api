@@ -31,14 +31,15 @@ searches.get("/searches/count", async (c) => {
   return c.json({ count: parseInt(searchesCount) });
 });
 
+
 searches.post(
   "/searches",
   zThrowValidator(
     "json",
     object({
-      exam_board: z.enum(["cie"]),
-      level: z.enum(["igcse", "alevel"]),
-      feature: z.enum(["click"]),
+      exam_board: z.enum(["CIE"]),
+      level: z.enum(["IGCSE", "A-Level", "Pre-U", "Other"]),
+      feature: z.enum(["click", "command"]),
       website: z.url(),
     })
   ),
