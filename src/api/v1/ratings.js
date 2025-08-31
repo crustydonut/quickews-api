@@ -3,6 +3,7 @@ import { Ratings } from "../../db/schema/Ratings";
 import { and, asc, avg, count, eq, gt } from "drizzle-orm";
 import z, { object } from "zod";
 import { zThrowValidator } from "../../utils/validator";
+import rateLimiter from "../../utils/rateLimiter";
 
 /**
  * @typedef {object} Bindings
@@ -85,18 +86,11 @@ ratings.post(
     }
 
     const key = `limit:ratings:${ip}`;
-    const limit = await c.env.KV.get(key);
 
-    if (limit) {
-      const intLimit = parseInt(limit);
+    const tooManyReq = await rateLimiter(c, key, 5, 1000 * 3600 * 24);
 
-      if (intLimit >= 5) {
-        return c.body(null, 429);
-      }
-
-      await c.env.KV.put(key, (intLimit + 1).toString());
-    } else {
-      await c.env.KV.put(key, "1", { expirationTtl: 86400 });
+    if (tooManyReq) {
+      return c.body(null, 429);
     }
 
     await c

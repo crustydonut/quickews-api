@@ -13,20 +13,12 @@ const mau = new Hono();
 
 mau.post("/mau", async (c) => {
   const ip = c.req.header("CF-Connecting-IP");
-
   const key = `limit:mau:${ip}`;
-  const limit = await c.env.KV.get(key);
 
-  if (limit) {
-    const intLimit = parseInt(limit);
+  const tooManyReq = await rateLimiter(c, key, 3, 1000 * 3600 * 24);
 
-    if (intLimit >= 5) {
-      return c.body(null, 429);
-    }
-
-    await c.env.KV.put(key, (intLimit + 1).toString());
-  } else {
-    await c.env.KV.put(key, "1", { expirationTtl: 30 * 24 * 3600 });
+  if (tooManyReq) {
+    return c.body(null, 429);
   }
 
   const url = `https://api.ipinfo.io/lite/${ip}?token=${c.env.IPINFO_API_TOKEN}`;

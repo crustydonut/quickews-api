@@ -3,6 +3,7 @@ import { Searches } from "../../db/schema/Searches";
 import { count } from "drizzle-orm";
 import { zThrowValidator } from "../../utils/validator";
 import z, { object } from "zod";
+import rateLimiter from "../../utils/rateLimiter";
 
 /**
  * @typedef {object} Bindings
@@ -31,7 +32,6 @@ searches.get("/searches/count", async (c) => {
   return c.json({ count: parseInt(searchesCount) });
 });
 
-
 searches.post(
   "/searches",
   zThrowValidator(
@@ -43,25 +43,17 @@ searches.post(
       website: z.url(),
     })
   ),
-  async (c) => {
-    const { exam_board, feature, level, website } = await c.req.json();
+    async (c) => {
+      const { exam_board, feature, level, website } = await c.req.json();
 
-    const ip = c.req.header("CF-Connecting-IP") || "8.8.8.8";
-    const key = `limit:searches:${ip}`;
+      const ip = c.req.header("CF-Connecting-IP") || "8.8.8.8";
+      const key = `limit:searches:${ip}`;
 
-    const limit = await c.env.KV.get(key);
-
-    if (limit) {
-      const intLimit = parseInt(limit);
-
-      if (intLimit >= 20) {
-        return c.body(null, 429);
+      const tooManyReq = await rateLimiter(c, key, 20, 60_000)
+      
+      if (tooManyReq) {
+        return c.body(null, 429)
       }
-
-      await c.env.KV.put(key, (intLimit + 1).toString());
-    } else {
-      await c.env.KV.put(key, "1", { expirationTtl: 60 });
-    }
 
     await c
       .get("db")

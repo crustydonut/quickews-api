@@ -21,20 +21,12 @@ installs.get("/installs", async (c) => {
 installs.post("/installs", async (c) => {
   try {
     const ip = c.req.header("CF-Connecting-IP");
-
     const key = `limit:installs:${ip}`;
-    const limit = await c.env.KV.get(key);
 
-    if (limit) {
-      const intLimit = parseInt(limit);
+    const tooManyReq = await rateLimiter(c, key, 5, 1000 * 3600 * 24);
 
-      if (intLimit >= 5) {
-        return c.body(null, 429);
-      }
-
-      await c.env.KV.put(key, (intLimit + 1).toString());
-    } else {
-      await c.env.KV.put(key, "1", { expirationTtl: 86400 });
+    if (tooManyReq) {
+      return c.body(null, 429);
     }
 
     const installs = await c.env.KV.get("cache:installs");
