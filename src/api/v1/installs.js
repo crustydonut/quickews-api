@@ -13,7 +13,7 @@ const installs = new Hono();
 installs.get("/installs", async (c) => {
   try {
     const installs = await c.env.KV.get("cache:installs");
-    return c.json({ count: installs });
+    return c.json({ count: installs || "0" });
   } catch (error) {
     return c.json({ error: error.message });
   }
